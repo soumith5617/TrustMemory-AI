@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TrustMemory AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF0EA;
+  --paper-dim:#E4E7DE;
+  --card:#FFFFFF;
+  --ink:#1C2530;
+  --ink-soft:#5B6572;
+  --ink-faint:#8A93A0;
+  --line:rgba(28,37,48,.13);
+  --line-strong:rgba(28,37,48,.24);
+  --brass:#B4863F;
+  --brass-dark:#8F6A2E;
+  --brass-tint:#F3E8D6;
+  --teal:#3F6659;
+  --teal-tint:#E1EAE5;
+  --rust:#A6453A;
+  --rust-tint:#F4E3E0;
+  --amber:#B4863F;
+  --font-serif:'Source Serif 4', Georgia, serif;
+  --font-sans:'IBM Plex Sans', Arial, sans-serif;
+  --font-mono:'IBM Plex Mono', monospace;
+  --radius:3px;
+  color-scheme: light;
+}
+:root:not([data-theme="light"]){}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-sans);
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+h1,h2,h3,h4{font-family:var(--font-serif); font-weight:600; margin:0; letter-spacing:-0.01em;}
+p{margin:0;}
+button{font-family:inherit;}
+a{color:inherit;}
+::selection{background:var(--brass-tint);}
+
+/* ---------- layout ---------- */
+#shell{display:flex; min-height:100vh;}
+#rail{
+  width:230px; flex:none; background:var(--ink); color:#EDE9DF;
+  display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+  padding-top:env(safe-area-inset-top,0px);
+}
+#rail .brand{padding:22px 20px 16px; border-bottom:1px solid rgba(237,233,223,.14);}
+#rail .brand .mark{font-family:var(--font-serif); font-size:19px; font-weight:600; color:#fff; letter-spacing:-0.01em;}
+#rail .brand .sub{font-size:11px; color:#B7BDC8; margin-top:4px; line-height:1.4;}
+#rail nav{flex:1; padding:10px 10px; overflow-y:auto;}
+#rail nav button{
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+  background:none; border:none; color:#C7CBD3; padding:9px 10px; border-radius:var(--radius);
+  cursor:pointer; font-size:13.5px; margin-bottom:1px; transition:background .12s, color .12s;
+}
+#rail nav button .dot{width:5px; height:5px; border-radius:50%; background:transparent; flex:none;}
+#rail nav button:hover{background:rgba(237,233,223,.07); color:#fff;}
+#rail nav button.active{background:rgba(180,134,63,.22); color:#fff;}
+#rail nav button.active .dot{background:var(--brass);}
+#rail .rail-foot{padding:14px 20px 18px; border-top:1px solid rgba(237,233,223,.14);}
+#rail .rail-foot button{
+  width:100%; padding:8px 10px; background:transparent; border:1px solid rgba(237,233,223,.3);
+  color:#EDE9DF; border-radius:var(--radius); cursor:pointer; font-size:12.5px;
+}
+#rail .rail-foot button:hover{border-color:#fff;}
+
+#main{flex:1; min-width:0; display:flex; flex-direction:column;}
+#ticker{
+  background:#fff; border-bottom:1px solid var(--line); padding:8px 28px; font-size:12px;
+  color:var(--ink-soft); display:flex; align-items:center; gap:8px; cursor:pointer;
+}
+#ticker b{color:var(--ink); font-weight:600;}
+#ticker .tk-dot{width:6px;height:6px;border-radius:50%; background:var(--brass); flex:none;}
+#content{padding:28px 32px 60px; max-width:1180px; width:100%; margin:0 auto;}
+
+/* ---------- generic components ---------- */
+.pagehead{margin-bottom:22px;}
+.pagehead h1{font-size:25px;}
+.pagehead .lede{color:var(--ink-soft); font-size:13.5px; margin-top:5px; max-width:60ch;}
+.eyebrow{font-size:11.5px; color:var(--brass-dark); font-weight:600; margin-bottom:4px;}
+
+.grid{display:grid; gap:16px;}
+.g4{grid-template-columns:repeat(4,1fr);}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g2{grid-template-columns:repeat(2,1fr);}
+@media (max-width:900px){.g4{grid-template-columns:repeat(2,1fr);} .g3{grid-template-columns:1fr 1fr;} .g2{grid-template-columns:1fr;}}
+
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px;}
+.metric{padding:16px 18px; background:var(--card); border:1px solid var(--line); border-radius:var(--radius);}
+.metric .label{font-size:11.5px; color:var(--ink-soft); text-transform:none;}
+.metric .num{font-family:var(--font-serif); font-size:30px; margin-top:6px; font-weight:600;}
+.metric .num.warn{color:var(--rust);}
+.metric .num.ok{color:var(--teal);}
+
+.section{margin-bottom:30px;}
+.section > h2{font-size:16px; margin-bottom:12px; display:flex; align-items:center; gap:8px;}
+.section > .desc{color:var(--ink-soft); font-size:12.5px; margin:-6px 0 12px;}
+
+.badge{display:inline-flex; align-items:center; gap:5px; font-size:11px; padding:2px 8px; border-radius:20px; font-weight:600; white-space:nowrap;}
+.badge.ok{background:var(--teal-tint); color:var(--teal);}
+.badge.warn{background:var(--brass-tint); color:var(--brass-dark);}
+.badge.bad{background:var(--rust-tint); color:var(--rust);}
+.badge.neutral{background:var(--paper-dim); color:var(--ink-soft);}
+
+.btn{display:inline-flex; align-items:center; gap:6px; border-radius:var(--radius); border:1px solid var(--line-strong); background:#fff; color:var(--ink); padding:8px 14px; font-size:12.5px; font-weight:600; cursor:pointer;}
+.btn:hover{border-color:var(--ink);}
+.btn.primary{background:var(--ink); color:#fff; border-color:var(--ink);}
+.btn.primary:hover{background:#000;}
+.btn.brass{background:var(--brass); color:#fff; border-color:var(--brass);}
+.btn.brass:hover{background:var(--brass-dark);}
+.btn.sm{padding:5px 10px; font-size:11.5px;}
+.btn[disabled]{opacity:.45; cursor:not-allowed;}
+select, input[type=text]{font-family:inherit; font-size:12.5px; padding:7px 9px; border-radius:var(--radius); border:1px solid var(--line-strong); background:#fff; color:var(--ink);}
+
+.hr{height:1px; background:var(--line); border:none; margin:16px 0;}
+
+/* alert list */
+.alert{display:flex; gap:14px; align-items:flex-start; padding:14px 0; border-bottom:1px solid var(--line);}
+.alert:last-child{border-bottom:none;}
+.alert .flag{width:8px; height:8px; border-radius:50%; margin-top:6px; flex:none;}
+.alert .flag.warn{background:var(--brass);}
+.alert .flag.bad{background:var(--rust);}
+.alert .flag.info{background:var(--teal);}
+.alert .body{flex:1;}
+.alert .title{font-weight:600; font-size:13.5px;}
+.alert .sub{color:var(--ink-soft); font-size:12px; margin-top:2px;}
+.alert .cta{flex:none;}
+
+/* table list */
+.rowlist{display:flex; flex-direction:column;}
+.rowitem{display:flex; align-items:center; gap:14px; padding:13px 0; border-bottom:1px solid var(--line); cursor:pointer;}
+.rowitem:last-child{border-bottom:none;}
+.rowitem:hover .name{color:var(--brass-dark);}
+.avatar{width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-serif); font-weight:600; font-size:14px; color:#fff; flex:none;}
+.rowitem .meta{flex:1; min-width:0;}
+.rowitem .name{font-weight:600; font-size:13.5px;}
+.rowitem .sub{color:var(--ink-soft); font-size:12px; margin-top:1px;}
+.rowitem .scores{display:flex; gap:8px; flex:none;}
+.scorepill{text-align:center; min-width:64px;}
+.scorepill .v{font-family:var(--font-serif); font-weight:600; font-size:16px;}
+.scorepill .l{font-size:10px; color:var(--ink-soft);}
+
+/* detail header */
+.detail-head{display:flex; gap:18px; align-items:center; margin-bottom:22px;}
+.detail-head .avatar{width:58px; height:58px; font-size:20px;}
+.detail-head h1{font-size:22px;}
+.detail-head .tags{display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;}
+
+/* timeline */
+.timeline{position:relative; padding-left:22px;}
+.timeline::before{content:"";position:absolute; left:5px; top:4px; bottom:4px; width:1px; background:var(--line-strong);}
+.tl-item{position:relative; padding-bottom:18px;}
+.tl-item::before{content:""; position:absolute; left:-22px; top:4px; width:9px; height:9px; border-radius:50%; background:var(--ink); border:2px solid var(--paper);}
+.tl-item.warn::before{background:var(--brass);}
+.tl-item.bad::before{background:var(--rust);}
+.tl-item.ok::before{background:var(--teal);}
+.tl-item .date{font-size:10.5px; color:var(--ink-faint); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.03em;}
+.tl-item .txt{font-size:13px; margin-top:2px;}
+.tl-item .tag{display:inline-block; margin-top:4px; font-size:10.5px; color:var(--ink-soft);}
+
+/* why panel */
+.why{background:var(--paper-dim); border-radius:var(--radius); padding:16px 18px; border-left:3px solid var(--brass);}
+.why h4{font-size:12.5px; color:var(--brass-dark); margin-bottom:8px;}
+.why ul{margin:0; padding-left:18px; font-size:13px;}
+.why li{margin-bottom:4px;}
+.why .action{margin-top:12px; padding-top:12px; border-top:1px solid var(--line-strong); font-size:12.5px;}
+
+/* tabs */
+.tabs{display:flex; gap:2px; border-bottom:1px solid var(--line); margin-bottom:16px;}
+.tabs button{background:none; border:none; padding:9px 14px; font-size:12.5px; font-weight:600; color:var(--ink-soft); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px;}
+.tabs button.active{color:var(--ink); border-bottom-color:var(--brass);}
+
+/* memory entries */
+.mem-entry{padding:12px 0; border-bottom:1px solid var(--line); font-size:13px;}
+.mem-entry:last-child{border-bottom:none;}
+.mem-entry .k{font-size:10.5px; font-family:var(--font-mono); color:var(--ink-faint); text-transform:uppercase; letter-spacing:.03em;}
+
+/* matching candidate card */
+.candidate{border:1px solid var(--line); border-radius:var(--radius); padding:16px; background:#fff;}
+.candidate.top{border-color:var(--brass); background:linear-gradient(180deg,var(--brass-tint),#fff 70%);}
+.candidate .rank{font-size:11px; color:var(--ink-faint); font-family:var(--font-mono);}
+.candidate .mname{font-family:var(--font-serif); font-size:17px; font-weight:600; margin-top:2px;}
+.candidate .mscore{font-size:26px; font-family:var(--font-serif); font-weight:700; color:var(--brass-dark);}
+.candidate .facts{margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:6px 10px; font-size:11.5px; color:var(--ink-soft);}
+.candidate .facts b{color:var(--ink); font-weight:600;}
+.candidate ul.why-list{margin:10px 0 0; padding-left:16px; font-size:12px;}
+.candidate ul.why-list li{margin-bottom:3px;}
+
+/* agent activity */
+.activity-row{display:grid; grid-template-columns:78px 130px 1fr; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); font-size:12.5px; align-items:baseline;}
+.activity-row .t{font-family:var(--font-mono); color:var(--ink-faint); font-size:11px;}
+.activity-row .agent{font-weight:600; font-size:11px; padding:2px 7px; border-radius:20px; display:inline-block; width:fit-content;}
+.agent.mem{background:#E4E9F2; color:#31507A;}
+.agent.dec{background:var(--brass-tint); color:var(--brass-dark);}
+.agent.ref{background:#EFE4F2; color:#6A3E7A;}
+.agent.match{background:var(--teal-tint); color:var(--teal);}
+.agent.voice{background:var(--rust-tint); color:var(--rust);}
+
+/* demo mode */
+.scenario-btn{display:block; width:100%; text-align:left; background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:20px; cursor:pointer;}
+.scenario-btn:hover{border-color:var(--brass);}
+.scenario-btn .snum{font-family:var(--font-mono); font-size:11px; color:var(--brass-dark);}
+.scenario-btn h3{font-size:17px; margin-top:4px;}
+.scenario-btn .stag{color:var(--ink-soft); font-size:12.5px; margin-top:4px;}
+
+.flow{display:flex; align-items:center; gap:0; margin:20px 0 24px; overflow-x:auto;}
+.flow .fstep{flex:1; min-width:90px; text-align:center; padding:10px 4px; border-bottom:3px solid var(--line-strong); color:var(--ink-faint); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.03em; transition:all .2s;}
+.flow .fstep.active{color:var(--brass-dark); border-bottom-color:var(--brass);}
+.flow .fstep.done{color:var(--ink-soft); border-bottom-color:var(--teal);}
+
+.narration{background:var(--ink); color:#DCE0E6; border-radius:var(--radius); padding:18px 20px; font-family:var(--font-mono); font-size:12.5px; line-height:1.8; max-height:340px; overflow-y:auto;}
+.narration .ln{margin-bottom:2px;}
+.narration .ln .agent-tag{color:var(--brass);}
+.narration .ln.sys{color:#8A93A0;}
+
+.compare{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px;}
+.compare .box{border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px;}
+.compare .box.old{background:var(--paper-dim);}
+.compare .box.new{background:var(--teal-tint); border-color:var(--teal);}
+.compare .box h4{font-size:12px; margin-bottom:6px;}
+
+.callcard{border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-bottom:12px; background:#fff;}
+.callcard .transcript{background:var(--paper-dim); border-radius:var(--radius); padding:12px 14px; margin-top:10px; font-size:12.5px;}
+.callcard .transcript .who{font-weight:600; margin-top:8px;}
+.callcard .transcript .who:first-child{margin-top:0;}
+.simbadge{font-size:10.5px; background:var(--brass-tint); color:var(--brass-dark); padding:2px 8px; border-radius:20px; font-weight:600;}
+
+.empty{text-align:center; padding:40px 20px; color:var(--ink-soft);}
+.empty h3{color:var(--ink); font-size:15px; margin-bottom:6px;}
+
+.kv{display:flex; justify-content:space-between; font-size:12.5px; padding:7px 0; border-bottom:1px solid var(--line);}
+.kv:last-child{border-bottom:none;}
+.kv .k{color:var(--ink-soft);}
+
+/* network cylinders (Hindsight Core) */
+.netgrid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px;}
+.netcyl{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px 14px; text-align:center; position:relative;}
+.netcyl.active-net{border-color:var(--brass);}
+.netcyl .nicon{width:34px; height:26px; margin:0 auto 10px; border:2px solid var(--ink-soft); border-radius:50%/8px; position:relative;}
+.netcyl .nicon::after{content:""; position:absolute; left:-2px; right:-2px; top:8px; bottom:-2px; border:2px solid var(--ink-soft); border-top:none; border-radius:0 0 50%/8px 8px;}
+.netcyl .nname{font-size:12px; font-weight:600;}
+.netcyl .ncount{font-family:var(--font-serif); font-size:22px; font-weight:600; margin-top:4px;}
+.netcyl .ndesc{font-size:10.5px; color:var(--ink-soft); margin-top:4px; line-height:1.4;}
+
+/* architecture swimlanes */
+.arch-wrap{overflow-x:auto; padding-bottom:8px;}
+.arch-grid{display:grid; grid-template-columns:repeat(3,minmax(230px,1fr)); gap:14px; min-width:760px;}
+.lane{border:1px solid var(--line-strong); border-radius:var(--radius); background:#FBFAF6; padding:14px;}
+.lane h4{font-size:11.5px; text-transform:none; color:var(--brass-dark); font-weight:600; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--line);}
+.lane .node{background:#fff; border:1px solid var(--line-strong); border-radius:var(--radius); padding:9px 10px; font-size:12px; margin-bottom:8px;}
+.lane .node:last-child{margin-bottom:0;}
+.lane .node.cyl{background:var(--brass-tint); border-color:var(--brass); font-weight:600;}
+.arrow-note{font-size:11px; color:var(--ink-faint); text-align:center; padding:4px 0; font-family:var(--font-mono);}
+
+@media (max-width:760px){
+  #rail{position:fixed; left:-230px; z-index:40; transition:left .2s; box-shadow:0 0 0 2000px rgba(0,0,0,0);}
+  #rail.open{left:0; box-shadow:6px 0 24px rgba(0,0,0,.25);}
+  #content{padding:20px 16px 60px;}
+  .g4,.g3,.g2,.compare{grid-template-columns:1fr;}
+  #menubtn{display:inline-flex !important;}
+}
+#menubtn{display:none; align-items:center; gap:8px; background:#fff; border:1px solid var(--line-strong); border-radius:var(--radius); padding:7px 10px; cursor:pointer; margin-right:10px;}
+</style>
+</head>
+<body>
+<div id="shell">
+  <aside id="rail">
+    <div class="brand">
+      <div class="mark">TrustMemory AI</div>
+      <div class="sub">Memory, intelligence and action layer for placement agencies.</div>
+    </div>
+    <nav id="navlist"></nav>
+    <div class="rail-foot">
+      <button id="resetBtn">Reset demo</button>
+    </div>
+  </aside>
+  <div id="main">
+    <div id="ticker"><span class="tk-dot"></span><span id="tickerText">Agent activity will appear here.</span></div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   TRUSTMEMORY AI — single-file interactive prototype
+   All five agents (Memory, Decision, Reflection, Matching, Voice) are
+   simulated locally in the browser. Hindsight / Groq / Vapi are represented
+   through clean adapter functions (retain/recall/reflect, classify, call)
+   with deterministic fallback logic, per the product's own "demo
+   reliability" principle — no external services are contacted.
+   ========================================================================= */
+
+const NAV = [
+  {id:'dashboard', label:'Coordinator Dashboard'},
+  {id:'helpers', label:'Helpers'},
+  {id:'households', label:'Households'},
+  {id:'placements', label:'Placements'},
+  {id:'memory', label:'Hindsight Core'},
+  {id:'matching', label:'Matching'},
+  {id:'insights', label:'Insights'},
+  {id:'voice', label:'Voice Agent'},
+  {id:'activity', label:'Agent Activity'},
+  {id:'demo', label:'Demo Mode'},
+  {id:'architecture', label:'Architecture'},
+  {id:'settings', label:'Settings'},
+];
+
+/* ---------------------------------------------------------------------
+   SEED DATA
+--------------------------------------------------------------------- */
+function seed(){
+  const helpers = [
+    {id:'anita', name:'Anita Verma', location:'Hyderabad', exp:6,
+      skills:['elder_care','cleaning'], availability:'Full-time',
+      roleScores:{elder_care:88, child_care:60, cleaning:70, cooking:55},
+      color:'#8F6A2E'},
+    {id:'priya', name:'Priya Nair', location:'Hyderabad', exp:4,
+      skills:['elder_care','child_care','cleaning'], availability:'Full-time',
+      roleScores:{elder_care:93, child_care:38, cleaning:74, cooking:50},
+      color:'#3F6659'},
+    {id:'radha', name:'Radha Kumari', location:'Secunderabad', exp:7,
+      skills:['child_care','cooking'], availability:'Full-time',
+      roleScores:{elder_care:45, child_care:90, cleaning:55, cooking:80},
+      color:'#5B4A8F'},
+    {id:'sunita', name:'Sunita Devi', location:'Hyderabad', exp:3,
+      skills:['cleaning','cooking'], availability:'Part-time',
+      roleScores:{elder_care:50, child_care:48, cleaning:78, cooking:65},
+      color:'#A6453A'},
+    {id:'meena', name:'Meena Joshi', location:'Gachibowli', exp:9,
+      skills:['elder_care','cooking'], availability:'Full-time',
+      roleScores:{elder_care:81, child_care:52, cleaning:60, cooking:85},
+      color:'#31507A'},
+    {id:'kavita', name:'Kavita Reddy', location:'Kukatpally', exp:5,
+      skills:['child_care'], availability:'Full-time',
+      roleScores:{elder_care:40, child_care:76, cleaning:58, cooking:52},
+      color:'#8F6A2E'},
+    {id:'lakshmi', name:'Lakshmi Rao', location:'Hyderabad', exp:10,
+      skills:['cleaning'], availability:'Full-time',
+      roleScores:{elder_care:55, child_care:40, cleaning:92, cooking:48},
+      color:'#3F6659'},
+    {id:'fatima', name:'Fatima Sheikh', location:'Begumpet', exp:2,
+      skills:['elder_care','child_care'], availability:'Full-time',
+      roleScores:{elder_care:70, child_care:65, cleaning:50, cooking:45},
+      color:'#5B4A8F'},
+  ];
+
+  const households = [
+    {id:'h101', name:'Sharma Residence', location:'Jubilee Hills', requirement:'cleaning', schedule:'Weekday mornings'},
+    {id:'h102', name:'Reddy Residence', location:'Banjara Hills', requirement:'elder_care', schedule:'Live-in'},
+    {id:'h104', name:'Iyer Residence', location:'Madhapur', requirement:'child_care', schedule:'Weekday, 9am–6pm'},
+    {id:'h105', name:'Gupta Residence', location:'Kondapur', requirement:'child_care', schedule:'Weekday, 8am–5pm'},
+    {id:'h106', name:'Nair Residence', location:'Gachibowli', requirement:'elder_care', schedule:'Live-in, new requirement'},
+    {id:'h107', name:'Verma Residence', location:'Himayatnagar', requirement:'elder_care', schedule:'Full-time'},
+  ];
+
+  const placements = [
+    {id:'p1', helperId:'anita', householdId:'h107', role:'elder_care', start:'2026-01-05', end:null, status:'active'},
+    {id:'p2', helperId:'priya', householdId:'h102', role:'elder_care', start:'2025-11-10', end:null, status:'active'},
+    {id:'p3', helperId:'priya', householdId:'h105', role:'child_care', start:'2025-08-01', end:'2025-09-14', status:'ended_poor_fit'},
+    {id:'p4', helperId:'sunita', householdId:'h104', role:'child_care', start:'2025-09-01', end:'2025-10-20', status:'failed'},
+    {id:'p5', helperId:'kavita', householdId:'h104', role:'child_care', start:'2025-11-01', end:'2025-12-15', status:'failed'},
+    {id:'p6', helperId:'fatima', householdId:'h104', role:'child_care', start:'2026-01-10', end:'2026-02-18', status:'failed'},
+    {id:'p7', helperId:'lakshmi', householdId:'h101', role:'cleaning', start:'2025-06-01', end:null, status:'active'},
+    {id:'p8', helperId:'meena', householdId:'h106', role:'cooking', start:'2025-05-01', end:null, status:'active'},
+  ];
+
+  // seed events — the underlying "experience" record for each helper/household,
+  // deliberately authored (not random) to tell a believable story.
+  const events = [
+    // Anita — reliable history, ends just before the demo scenario begins
+    ev('anita','h107','p1','placement_start','Placement started at Verma Residence.','info','2026-01-05'),
+    ev('anita','h107','p1','positive_feedback','Household reported excellent care and punctuality.','info','2026-01-17'),
+    ev('anita','h107','p1','positive_feedback','Household praised communication and reliability.','info','2026-02-18'),
+
+    // Priya — strong elder care, weak childcare (role-fit story)
+    ev('priya','h102','p2','placement_start','Placement started at Reddy Residence (elder care).','info','2025-11-10'),
+    ev('priya','h102','p2','positive_feedback','Household highly satisfied with elder-care routine.','info','2025-12-02'),
+    ev('priya','h102','p2','positive_feedback','Consistent, attentive care reported again.','info','2026-01-20'),
+    ev('priya','h105','p3','complaint','Household reported difficulty managing two young children.','medium','2025-08-28'),
+    ev('priya','h105','p3','negative_feedback','Household felt childcare routine was not a good fit.','medium','2025-09-10'),
+    ev('priya','h105','p3','placement_end','Placement ended — role mismatch (child care).','info','2025-09-14'),
+
+    // Household H104 — three different helpers, three failures (fair-blame story)
+    ev('sunita','h104','p4','placement_start','Placement started at Iyer Residence (child care).','info','2025-09-01'),
+    ev('sunita','h104','p4','complaint','Household reported schedule expectations were not being met.','medium','2025-09-25'),
+    ev('sunita','h104','p4','placement_end','Placement ended — household requested replacement.','info','2025-10-20'),
+    ev('kavita','h104','p5','placement_start','Placement started at Iyer Residence (child care).','info','2025-11-01'),
+    ev('kavita','h104','p5','complaint','Household reported dissatisfaction with schedule adherence.','medium','2025-11-30'),
+    ev('kavita','h104','p5','placement_end','Placement ended — household requested replacement.','info','2025-12-15'),
+    ev('fatima','h104','p6','placement_start','Placement started at Iyer Residence (child care).','info','2026-01-10'),
+    ev('fatima','h104','p6','complaint','Household reported schedule expectations were not met again.','medium','2026-02-05'),
+    ev('fatima','h104','p6','placement_end','Placement ended — household requested replacement.','info','2026-02-18'),
+
+    // Lakshmi — steady cleaning specialist
+    ev('lakshmi','h101','p7','placement_start','Placement started at Sharma Residence.','info','2025-06-01'),
+    ev('lakshmi','h101','p7','positive_feedback','Consistently thorough, on-time service.','info','2025-09-12'),
+    ev('lakshmi','h101','p7','positive_feedback','Household renewed engagement, cited reliability.','info','2026-01-15'),
+
+    // Meena — strong general history
+    ev('meena','h106','p8','placement_start','Placement started at Nair Residence (cooking).','info','2025-05-01'),
+    ev('meena','h106','p8','positive_feedback','Household satisfied with meal planning and hygiene.','info','2025-08-20'),
+
+    // Radha — strong childcare track record (context helper)
+    ev('radha', null, null, 'positive_feedback','Previous household praised patience with toddlers.','info','2025-10-05'),
+    ev('radha', null, null, 'placement_end','Prior placement completed successfully, contract concluded.','info','2025-12-01'),
+  ];
+
+  return {helpers, households, placements, events, calls:[], reflections:[], recommendations:[], activity:[], stagedBackups:[]};
+
+  function ev(helperId, householdId, placementId, type, description, severity, date){
+    return {id:uid(), helperId, householdId, placementId, type, description, severity, date, source:'seed'};
+  }
+}
+
+function uid(){return Math.random().toString(36).slice(2,9);}
+
+/* ---------------------------------------------------------------------
+   STATE
+--------------------------------------------------------------------- */
+let INITIAL = seed();
+let S = clone(INITIAL);
+let MEM = {}; // entityId -> {world:[], experience:[], opinion:[], observation:[]}
+let SCORES = {}; // entityId -> {trust, churn, difficulty}
+let route = {page:'dashboard', param:null};
+let clockBase = new Date('2026-03-08T09:00:00');
+let clockTick = 0;
+
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function nowStamp(){
+  clockTick += 1;
+  const d = new Date(clockBase.getTime() + clockTick*37000);
+  return d.toTimeString().slice(0,8);
+}
+function memOf(id){
+  if(!MEM[id]) MEM[id] = {world:[], experience:[], opinion:[], observation:[]};
+  return MEM[id];
+}
+
+/* ---------------------------------------------------------------------
+   AGENT ADAPTERS — Hindsight (retain / recall / reflect), LLM classify,
+   Voice call. Each has a deterministic fallback and is logged to the
+   Agent Activity feed, matching the "demo reliability" requirement.
+--------------------------------------------------------------------- */
+function retain(entityId, layer, text, meta){
+  const m = memOf(entityId);
+  m[layer].push({id:uid(), text, meta:meta||{}, t:nowStamp()});
+  log('mem','MEMORY AGENT', `Retained ${layer} memory for ${labelFor(entityId)}: "${text}"`);
+}
+function recall(entityId, note){
+  const m = memOf(entityId);
+  const count = m.world.length + m.experience.length + m.opinion.length + m.observation.length;
+  log('dec','DECISION AGENT', `Recalled ${count} memory entries for ${labelFor(entityId)}${note? ' — '+note:''}.`);
+  return m;
+}
+function classifySeverity(eventType){
+  // deterministic fallback standing in for a targeted LLM call (Groq unavailable in-browser)
+  const map = {
+    late_arrival:{severity:'MEDIUM', confidence:0.81, reason:'Attendance deviation; severity depends on recurrence.'},
+    complaint:{severity:'MEDIUM', confidence:0.85, reason:'Household-reported dissatisfaction requires review.'},
+    negative_feedback:{severity:'MEDIUM', confidence:0.78, reason:'Negative sentiment recorded in feedback.'},
+    positive_feedback:{severity:'LOW', confidence:0.9, reason:'Positive sentiment, no risk signal.'},
+    placement_failure:{severity:'HIGH', confidence:0.9, reason:'Placement ended in failure.'},
+    successful_placement:{severity:'LOW', confidence:0.92, reason:'Placement concluded successfully.'},
+    household_complaint:{severity:'HIGH', confidence:0.83, reason:'Household-side dissatisfaction pattern.'},
+    coaching_completed:{severity:'LOW', confidence:0.88, reason:'Coaching resolved with commitments logged.'},
+  };
+  const r = map[eventType] || {severity:'LOW', confidence:0.6, reason:'Unclassified event type.'};
+  log('dec','DECISION AGENT', `Classified severity for "${eventType}" → ${r.severity} (confidence ${r.confidence}). ${r.reason}`);
+  return r;
+}
+
+/* ---------------------------------------------------------------------
+   SCORING — deterministic heuristics (section 9 of the PRD)
+--------------------------------------------------------------------- */
+function helperEvents(id){ return S.events.filter(e=>e.helperId===id); }
+function householdEvents(id){ return S.events.filter(e=>e.householdId===id); }
+
+function computeTrust(helperId){
+  const evs = helperEvents(helperId);
+  let score = 68; // baseline
+  evs.forEach(e=>{
+    if(e.type==='positive_feedback') score += 4;
+    if(e.type==='placement_start') score += 1;
+    if(e.type==='late_arrival') score -= 3;
+    if(e.type==='complaint') score -= 6;
+    if(e.type==='negative_feedback') score -= 5;
+    if(e.type==='placement_end' && !e.description.toLowerCase().includes('replacement')) score += 2;
+  });
+  return clamp(Math.round(score),0,100);
+}
+
+function computeChurn(helperId){
+  const evs = helperEvents(helperId).slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
+  let score = 18; // baseline low risk
+  const recentWindowDays = 30;
+  const last = evs.length? new Date(evs[evs.length-1].date): new Date();
+  evs.forEach(e=>{
+    const days = (last - new Date(e.date))/86400000;
+    const recencyWeight = days <= recentWindowDays ? 1.6 : (days <= 90 ? 1 : 0.4);
+    if(e.type==='late_arrival') score += 9*recencyWeight;
+    if(e.type==='complaint') score += 13*recencyWeight;
+    if(e.type==='negative_feedback') score += 10*recencyWeight;
+    if(e.type==='placement_end' && e.description.toLowerCase().includes('replacement')) score += 12*recencyWeight;
+    if(e.type==='positive_feedback') score -= 5;
+    if(e.type==='coaching_completed') score -= 14;
+  });
+  return clamp(Math.round(score),0,100);
+}
+
+function computeDifficulty(householdId){
+  const evs = householdEvents(householdId);
+  const failed = evs.filter(e=>e.type==='placement_end' && e.description.toLowerCase().includes('replacement')).length;
+  const complaints = evs.filter(e=>e.type==='complaint' || e.type==='household_complaint').length;
+  let score = 20 + failed*20 + complaints*8;
+  return clamp(Math.round(score),0,100);
+}
+
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+
+function recalcAll(){
+  S.helpers.forEach(h=>{
+    SCORES[h.id] = SCORES[h.id]||{};
+    SCORES[h.id].trust = computeTrust(h.id);
+    SCORES[h.id].churn = computeChurn(h.id);
+  });
+  S.households.forEach(h=>{
+    SCORES[h.id] = SCORES[h.id]||{};
+    SCORES[h.id].difficulty = computeDifficulty(h.id);
+  });
+}
+
+function trustBand(v){ return v>=80?'Strong': v>=60?'Stable': v>=40?'Needs Attention':'Critical'; }
+function trustBadgeClass(v){ return v>=80?'ok': v>=60?'ok': v>=40?'warn':'bad'; }
+function churnBadgeClass(v){ return v>=65?'bad': v>=40?'warn':'ok'; }
+function diffBadgeClass(v){ return v>=65?'bad': v>=40?'warn':'ok'; }
+
+/* ---------------------------------------------------------------------
+   ACTIVITY LOG
+--------------------------------------------------------------------- */
+function log(agentClass, agentLabel, text){
+  const row = {t:nowStamp(), agentClass, agentLabel, text};
+  S.activity.unshift(row);
+  if(S.activity.length>400) S.activity.length = 400;
+  updateTicker(row);
+  if(route.page==='activity') renderActivityList();
+}
+function updateTicker(row){
+  document.getElementById('tickerText').innerHTML = `<b>${row.agentLabel}</b> — ${escapeHtml(row.text)}`;
+}
+
+/* ---------------------------------------------------------------------
+   WORKFLOW: new event  (section 43 / 52)
+--------------------------------------------------------------------- */
+const EVENT_LABELS = {
+  late_arrival:'Late arrival reported.',
+  complaint:'Complaint received.',
+  positive_feedback:'Positive feedback received.',
+  placement_failure:'Placement ended — household requested replacement.',
+  successful_placement:'Placement milestone reached successfully.',
+  household_complaint:'Household-side complaint logged.',
+  coaching_completed:'Coaching call completed.',
+};
+
+function triggerEvent(type, helperId, householdId, opts){
+  opts = opts||{};
+  const desc = opts.description || EVENT_LABELS[type] || type;
+  const date = opts.date || todayIso();
+  const placementId = opts.placementId || null;
+  const e = {id:uid(), helperId, householdId, placementId, type, description:desc, severity:null, date, source:'live'};
+  S.events.push(e);
+
+  const beforeChurn = SCORES[helperId] ? SCORES[helperId].churn : null;
+  const beforeTrust = SCORES[helperId] ? SCORES[helperId].trust : null;
+
+  // 1. Memory Agent retains
+  retain(helperId, 'experience', desc, {type, date});
+  if(householdId) retain(householdId, 'experience', desc, {type, date});
+
+  // 2. Decision Agent recalls context
+  recall(helperId, 'evaluating new event');
+
+  // 3. LLM/deterministic severity classification
+  const cls = classifySeverity(type);
+  e.severity = cls.severity;
+
+  // 4. Score engine recalculates
+  recalcAll();
+  const afterChurn = SCORES[helperId] ? SCORES[helperId].churn : null;
+  const afterTrust = SCORES[helperId] ? SCORES[helperId].trust : null;
+  if(afterChurn!=null){
+    log('dec','DECISION AGENT', `Recalculated churn risk for ${labelFor(helperId)}. ${beforeChurn} → ${afterChurn}.`);
+    retain(helperId, 'opinion', `Churn risk assessed at ${afterChurn}/100 (${churnBadgeClass(afterChurn)==='bad'?'high':churnBadgeClass(afterChurn)==='warn'?'elevated':'low'}).`, {score:afterChurn});
+  }
+
+  // 5. Reflection Agent checks pattern threshold; Voice Agent branches coaching vs escalation
+  let actionCreated = false;
+  const crossedMedium = afterChurn!=null && beforeChurn!=null && afterChurn>=55 && beforeChurn<55;
+  const crossedCritical = afterChurn!=null && beforeChurn!=null && afterChurn>=75 && beforeChurn<75;
+  if(crossedMedium || crossedCritical){
+    log('ref','REFLECTION AGENT', `Compared recent events against historical attendance for ${labelFor(helperId)}. Deteriorating trend confirmed.`);
+    const isCritical = afterChurn>=75;
+    const rec = {id:uid(), entityType:'helper', entityId:helperId, text:`${labelForShort(helperId)}'s churn risk increased from ${beforeChurn} to ${afterChurn}.`,
+      action: isCritical? 'Escalate to coordinator' : 'Start coaching call', callType: isCritical?'escalation':'coaching', createdAt: e.date};
+    S.recommendations.unshift(rec);
+    log('voice','VOICE AGENT', `Recommended ${isCritical?'an escalation call to the coordinator':'a coaching call'} for ${labelFor(helperId)} based on risk ${isCritical?'reaching critical':'escalation'}.`);
+    actionCreated = true;
+  }
+
+  // Matching Agent: once risk is critical on an active placement, proactively pre-stage a backup
+  if(afterChurn!=null && afterChurn>=75 && householdId){
+    const already = S.stagedBackups.find(b=>b.householdId===householdId && b.status==='staged');
+    if(!already){
+      const hh = S.households.find(x=>x.id===householdId);
+      const candidates = findMatches(hh.requirement, householdId).filter(c=>c.helper.id!==helperId);
+      if(candidates.length){
+        const backup = candidates[0];
+        log('match','MATCHING AGENT', `Read Observation Network for ${hh.name}. Pre-staging backup helper in case ${labelFor(helperId)}'s placement needs replacement.`);
+        S.stagedBackups.unshift({id:uid(), householdId, atRiskHelperId:helperId, backupHelperId:backup.helper.id, score:backup.score, status:'staged', createdAt:e.date});
+        log('match','MATCHING AGENT', `Staged ${backup.helper.name} (match score ${backup.score}/100) as backup for ${hh.name}.`);
+      }
+    }
+  }
+
+  if(householdId){
+    const diff = computeDifficulty(householdId);
+    SCORES[householdId] = SCORES[householdId]||{};
+    SCORES[householdId].difficulty = diff;
+  }
+
+  renderCurrentPage();
+  return {event:e, beforeChurn, afterChurn, beforeTrust, afterTrust, actionCreated, classification:cls};
+}
+
+function todayIso(){ return '2026-03-'+String(8+ (clockTick%3)).padStart(2,'0'); }
+
+/* ---------------------------------------------------------------------
+   WORKFLOW: voice call
+--------------------------------------------------------------------- */
+const CALL_SCRIPTS = {
+  coaching: (h)=>[
+    {who:'Voice Agent', text:`Hi ${firstName(h.name)}, this is a quick check-in from the agency. We noticed a couple of late arrivals recently — is everything alright?`},
+    {who:firstName(h.name), text:`Sorry about that — there's been a transport issue on my usual route. I can switch to an earlier bus.`},
+    {who:'Voice Agent', text:`That would help. Can we agree that you'll message the household directly if you expect to be more than 10 minutes late?`},
+    {who:firstName(h.name), text:`Yes, I'll do that going forward.`},
+    {who:'Voice Agent', text:`Thank you — I've logged that commitment. We'll check in again in two weeks.`},
+  ],
+  checkin: (h,hh)=>[
+    {who:'Voice Agent', text:`Hello, this is a routine check-in on the current placement. How has the last month been?`},
+    {who:'Household', text:`Mostly fine, though scheduling has been a recurring friction point.`},
+    {who:'Voice Agent', text:`Understood — could you tell me a bit more about the scheduling expectations on your side?`},
+    {who:'Household', text:`We often need flexibility in the evenings that wasn't clearly discussed at the start.`},
+    {who:'Voice Agent', text:`Thank you, I'll note that as an expectation-setting gap for the record.`},
+  ],
+  escalation: (h)=>[
+    {who:'Voice Agent', text:`This is an escalation call regarding recent complaints on file. Can you walk me through what happened?`},
+    {who:firstName(h.name), text:`I understand the concern. I believe the schedule expectations shifted without much notice.`},
+    {who:'Voice Agent', text:`Noted. We'll flag this for coordinator review alongside the household record.`},
+  ],
+};
+
+function startCall(type, helperId, householdId, reason){
+  const helper = S.helpers.find(x=>x.id===helperId);
+  const household = S.households.find(x=>x.id===householdId);
+  recall(helperId, 'preparing call context');
+  log('voice','VOICE AGENT', `Initiated ${type} call${helper? ' with '+helper.name:''}. Voice simulation mode — no live Vapi/Bland call is placed in this browser prototype.`);
+  const script = (CALL_SCRIPTS[type]||CALL_SCRIPTS.coaching)(helper||{name:'Household contact'}, household);
+  const sentiment = type==='escalation' ? 'concerned' : 'cooperative';
+  const summary = type==='coaching'
+    ? `${helper?firstName(helper.name):'Helper'} acknowledged attendance concerns and committed to proactive updates when running late.`
+    : type==='checkin'
+    ? `Household raised a scheduling expectation gap; flagged for the household's memory record.`
+    : `Helper acknowledged the complaint; case flagged for coordinator review.`;
+  const call = {id:uid(), type, helperId, householdId, reason, status:'completed', transcript:script, summary, sentiment, followUp:'In 2 weeks', createdAt:nowStamp()};
+  S.calls.unshift(call);
+
+  // after-call extraction + retain
+  retain(helperId, 'experience', `${type} call completed. ${summary}`, {callId:call.id});
+  if(type==='coaching'){
+    retain(helperId, 'opinion', 'Helper demonstrated cooperative response to coaching; commitment logged.', {callId:call.id});
+  }
+  if(householdId) retain(householdId, 'experience', `${type} call completed regarding this placement.`, {callId:call.id});
+  log('mem','MEMORY AGENT', `Call outcome stored for ${helper?helper.name:household?household.name:'record'}.`);
+
+  // recalc after coaching (small relief in risk trend goes into next event's recency window naturally;
+  // we also log a coaching_completed event so future scoring reflects the intervention)
+  if(type==='coaching' && helperId){
+    S.events.push({id:uid(), helperId, householdId, placementId:null, type:'coaching_completed', description:'Coaching call completed; commitments logged.', severity:'LOW', date:todayIso(), source:'live'});
+    recalcAll();
+    log('dec','DECISION AGENT', `Recalculated churn risk for ${labelFor(helperId)} following coaching. Now ${SCORES[helperId].churn}.`);
+  }
+  renderCurrentPage();
+  return call;
+}
+
+/* ---------------------------------------------------------------------
+   WORKFLOW: reflection
+--------------------------------------------------------------------- */
+function reflectOnHousehold(householdId){
+  const hh = S.households.find(h=>h.id===householdId);
+  const placements = S.placements.filter(p=>p.householdId===householdId);
+  const failed = placements.filter(p=>p.status==='failed' || p.status==='ended_poor_fit');
+  recall(householdId, 'comparing placement history');
+  log('ref','REFLECTION AGENT', `Retrieved ${placements.length} placement records for ${hh.name} across ${new Set(placements.map(p=>p.helperId)).size} different helpers.`);
+  let classification, insight;
+  if(failed.length>=3){
+    classification='HYPOTHESIS';
+    insight = `${failed.length} placements ended in replacement across different helpers, with schedule-related complaints in each. Possible common factor: schedule or expectation mismatch on the household side, rather than helper performance.`;
+  } else if(failed.length>=1){
+    classification='OBSERVATION';
+    insight = `${failed.length} placement(s) at ${hh.name} ended early. Evidence is limited; further placements would clarify whether this is a pattern.`;
+  } else {
+    classification='FACT';
+    insight = `${hh.name} has no failed placements on record. Current placement history shows stability.`;
+  }
+  const evidence = failed.map(p=>{
+    const helper = S.helpers.find(h=>h.id===p.helperId);
+    return `${helper?helper.name:p.helperId}: placement ended ${p.end} (${p.status.replace('_',' ')})`;
+  });
+  const refl = {id:uid(), entityType:'household', entityId:householdId, classification, insight, evidence, confidence: failed.length>=3?0.72:failed.length>=1?0.5:0.9, createdAt:nowStamp()};
+  S.reflections.unshift(refl);
+  retain(householdId, 'observation', insight, {classification});
+  log('ref','REFLECTION AGENT', `Stored ${classification} for ${hh.name}: "${insight}"`);
+  renderCurrentPage();
+  return refl;
+}
+
+function reflectOnRoleFit(helperId){
+  const h = S.helpers.find(x=>x.id===helperId);
+  recall(helperId, 'comparing role-specific outcomes');
+  const rs = h.roleScores;
+  const best = Object.entries(rs).sort((a,b)=>b[1]-a[1])[0];
+  const worst = Object.entries(rs).sort((a,b)=>a[1]-b[1])[0];
+  const insight = `${h.name} performs consistently better in ${roleLabel(best[0])} (${best[1]}/100) than in ${roleLabel(worst[0])} (${worst[1]}/100), based on historical placement outcomes.`;
+  const refl = {id:uid(), entityType:'helper', entityId:helperId, classification:'OBSERVATION', insight, evidence:[`${roleLabel(best[0])} outcomes: strong, repeated positive feedback.`, `${roleLabel(worst[0])} outcomes: below-average feedback, early placement end.`], confidence:0.81, createdAt:nowStamp()};
+  S.reflections.unshift(refl);
+  retain(helperId, 'observation', insight, {});
+  log('ref','REFLECTION AGENT', `Stored role-fit OBSERVATION for ${h.name}.`);
+  renderCurrentPage();
+  return refl;
+}
+
+/* ---------------------------------------------------------------------
+   WORKFLOW: matching
+--------------------------------------------------------------------- */
+function findMatches(role, householdId, opts){
+  opts = opts||{};
+  const naive = opts.naive; // ignore memory/role-fit, mimic "generic ranking"
+  const hh = S.households.find(h=>h.id===householdId);
+  recall(householdId, 'retrieving household memory');
+  log('match','MATCHING AGENT', `Evaluating candidates for ${hh?hh.name:householdId} — requirement: ${roleLabel(role)}.`);
+  const scored = S.helpers.map(h=>{
+    recall(h.id);
+    const roleFit = h.roleScores[role]||40;
+    const trust = SCORES[h.id]?SCORES[h.id].trust:computeTrust(h.id);
+    const churn = SCORES[h.id]?SCORES[h.id].churn:computeChurn(h.id);
+    let score;
+    if(naive){
+      score = Math.round(50 + h.exp*2 - (h.location.includes('Hyderabad')?0:5)); // generic, ignores memory
+    } else {
+      score = Math.round(roleFit*0.5 + trust*0.3 + (100-churn)*0.2);
+    }
+    return {helper:h, score:clamp(score,0,100), roleFit, trust, churn};
+  }).sort((a,b)=>b.score-a.score);
+
+  if(!naive){
+    log('match','MATCHING AGENT', `Ranked ${scored.length} candidates using role-specific history, trust signal and churn risk.`);
+  } else {
+    log('match','MATCHING AGENT', `Ranked ${scored.length} candidates using generic profile fields only (no memory).`);
+  }
+  return scored;
+}
+function roleLabel(r){ return {elder_care:'elder care', child_care:'child care', cleaning:'cleaning', cooking:'cooking'}[r]||r; }
+
+/* ---------------------------------------------------------------------
+   HELPERS
+--------------------------------------------------------------------- */
+function labelFor(id){
+  const h = S.helpers.find(x=>x.id===id); if(h) return h.name;
+  const hh = S.households.find(x=>x.id===id); if(hh) return hh.name;
+  return id;
+}
+function labelForShort(id){ return labelFor(id).split(' ')[0]; }
+function firstName(n){ return n.split(' ')[0]; }
+function initials(n){ return n.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase(); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtDate(d){ if(!d) return '—'; const dt=new Date(d); return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}); }
+
+/* =========================================================================
+   RENDERING
+   ========================================================================= */
+function nav(page, param){ route = {page, param}; renderCurrentPage(); window.scrollTo(0,0); highlightNav(); }
+function renderCurrentPage(){
+  const c = document.getElementById('content');
+  switch(route.page){
+    case 'dashboard': c.innerHTML = pageDashboard(); wireDashboard(); break;
+    case 'helpers': c.innerHTML = pageHelpers(); break;
+    case 'helperDetail': c.innerHTML = pageHelperDetail(route.param); wireHelperDetail(route.param); break;
+    case 'households': c.innerHTML = pageHouseholds(); break;
+    case 'householdDetail': c.innerHTML = pageHouseholdDetail(route.param); wireHouseholdDetail(route.param); break;
+    case 'placements': c.innerHTML = pagePlacements(); break;
+    case 'memory': c.innerHTML = pageMemory(); wireMemory(); break;
+    case 'matching': c.innerHTML = pageMatching(); wireMatching(); break;
+    case 'insights': c.innerHTML = pageInsights(); break;
+    case 'voice': c.innerHTML = pageVoice(); wireVoice(); break;
+    case 'activity': c.innerHTML = pageActivity(); break;
+    case 'demo': c.innerHTML = pageDemo(); wireDemo(); break;
+    case 'architecture': c.innerHTML = pageArchitecture(); break;
+    case 'settings': c.innerHTML = pageSettings(); break;
+    default: c.innerHTML = '<div class="empty">Not found.</div>';
+  }
+}
+function highlightNav(){
+  document.querySelectorAll('#navlist button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.id===route.page || (route.page==='helperDetail'&&b.dataset.id==='helpers') || (route.page==='householdDetail'&&b.dataset.id==='households'));
+  });
+}
+
+/* ---------- Dashboard ---------- */
+function pageDashboard(){
+  recalcAll();
+  const activeHelpers = S.helpers.length;
+  const activeHouseholds = S.households.length;
+  const activePlacements = S.placements.filter(p=>p.status==='active').length;
+  const highChurn = S.helpers.filter(h=>SCORES[h.id].churn>=55).length;
+  const highDiff = S.households.filter(h=>SCORES[h.id].difficulty>=55).length;
+  const actions = S.recommendations.length;
+
+  const alerts = buildAiNoticedAlerts();
+
+  return `
+    <div class="pagehead">
+      <div class="eyebrow">Coordinator Dashboard</div>
+      <h1>Your agency's memory, intelligence and action layer.</h1>
+      <div class="lede">Every agent writes here: escalation calls from the Voice Agent, score changes from the Decision Agent, cross-placement patterns from the Reflection Agent, and pre-staged backups from the Matching Agent.</div>
+    </div>
+    <div class="grid g4" style="margin-bottom:30px;">
+      <div class="metric"><div class="label">Active helpers</div><div class="num">${activeHelpers}</div></div>
+      <div class="metric"><div class="label">Active households</div><div class="num">${activeHouseholds}</div></div>
+      <div class="metric"><div class="label">Active placements</div><div class="num">${activePlacements}</div></div>
+      <div class="metric"><div class="label">Actions required</div><div class="num ${actions>0?'warn':''}">${actions}</div></div>
+    </div>
+    <div class="grid g2" style="margin-bottom:30px;">
+      <div class="metric"><div class="label">High churn risk</div><div class="num ${highChurn>0?'warn':'ok'}">${highChurn}</div></div>
+      <div class="metric"><div class="label">High household difficulty</div><div class="num ${highDiff>0?'warn':'ok'}">${highDiff}</div></div>
+    </div>
+    <div class="section">
+      <h2>AI noticed</h2>
+      <div class="desc">Signals the system surfaced on its own, before a coordinator asked.</div>
+      <div class="card">
+        ${alerts.length? alerts.map(a=>alertRow(a)).join('') : emptyState('Nothing to flag right now.','Trigger an event from a helper or household profile, or run a Demo Mode scenario, to see this in action.')}
+      </div>
+    </div>
+    ${S.stagedBackups.filter(b=>b.status==='staged').length? `
+    <div class="section">
+      <h2>Pre-staged backups</h2>
+      <div class="desc">The Matching Agent scores replacement candidates before a coordinator asks, using the Observation Network.</div>
+      <div class="card">
+        ${S.stagedBackups.filter(b=>b.status==='staged').map(b=>{
+          const hh = S.households.find(x=>x.id===b.householdId);
+          const backup = S.helpers.find(h=>h.id===b.backupHelperId);
+          const atRisk = S.helpers.find(h=>h.id===b.atRiskHelperId);
+          return alertRow({flag:'warn', title:`${backup?backup.name:''} pre-staged as backup for ${hh?hh.name:''}.`, sub:`In case ${atRisk?atRisk.name:'the current helper'}'s placement needs replacement. Match score ${b.score}/100.`, cta:{label:'View household', onClick:`nav('householdDetail','${b.householdId}')`}});
+        }).join('')}
+      </div>
+    </div>`:''}
+    <div class="section">
+      <h2>Get started</h2>
+      <div class="grid g3">
+        ${quickCard('Run Demo Mode','See the full remember → understand → predict → act → learn loop in ~90 seconds.','demo')}
+        ${quickCard('Open Memory Explorer','Browse World, Experience, Opinion and Observation memory for any helper or household.','memory')}
+        ${quickCard('Try Matching','Enter a household requirement and see a memory-informed recommendation.','matching')}
+      </div>
+    </div>
+  `;
+}
+function quickCard(title, desc, page){
+  return `<button class="card" style="text-align:left; cursor:pointer;" onclick="nav('${page}')">
+    <div style="font-weight:600; font-size:13.5px; margin-bottom:4px;">${title}</div>
+    <div style="color:var(--ink-soft); font-size:12px;">${desc}</div>
+  </button>`;
+}
+function buildAiNoticedAlerts(){
+  const alerts = [];
+  S.recommendations.slice(0,5).forEach(r=>{
+    alerts.push({flag: r.callType==='escalation'?'bad':'warn', title: r.text, sub:'Recommended action: '+r.action, cta:{label: r.callType==='escalation'?'Escalate':'Review', onClick:`nav('helperDetail','${r.entityId}')`}});
+  });
+  S.households.forEach(h=>{
+    const d = SCORES[h.id]?SCORES[h.id].difficulty:computeDifficulty(h.id);
+    if(d>=55){
+      alerts.push({flag:'bad', title:`${h.name} has an elevated difficulty score (${d}/100).`, sub:'Multiple placement replacements on record.', cta:{label:'View reflection', onClick:`nav('householdDetail','${h.id}')`}});
+    }
+  });
+  const priya = S.helpers.find(h=>h.id==='priya');
+  if(priya){
+    alerts.push({flag:'info', title:`${priya.name} performs significantly better in elder care than child care.`, sub:'Role-specific historical performance.', cta:{label:'View matching', onClick:`nav('matching')`}});
+  }
+  return alerts;
+}
+function alertRow(a){
+  return `<div class="alert">
+    <div class="flag ${a.flag}"></div>
+    <div class="body"><div class="title">${a.title}</div><div class="sub">${a.sub}</div></div>
+    <div class="cta"><button class="btn sm" onclick="${a.cta.onClick}">${a.cta.label}</button></div>
+  </div>`;
+}
+function wireDashboard(){}
+function emptyState(title, sub){
+  return `<div class="empty"><h3>${title}</h3><p>${sub}</p></div>`;
+}
+
+/* ---------- Helpers list ---------- */
+function pageHelpers(){
+  recalcAll();
+  const rows = S.helpers.map(h=>{
+    const sc = SCORES[h.id];
+    return `<div class="rowitem" onclick="nav('helperDetail','${h.id}')">
+      <div class="avatar" style="background:${h.color}">${initials(h.name)}</div>
+      <div class="meta"><div class="name">${h.name}</div><div class="sub">${h.location} · ${h.exp} yrs · ${h.skills.map(roleLabel).join(', ')}</div></div>
+      <div class="scores">
+        <div class="scorepill"><div class="v">${sc.trust}</div><div class="l">Trust</div></div>
+        <div class="scorepill"><div class="v">${sc.churn}</div><div class="l">Churn</div></div>
+      </div>
+      <span class="badge ${trustBadgeClass(sc.trust)}">${trustBand(sc.trust)}</span>
+    </div>`;
+  }).join('');
+  return `<div class="pagehead"><div class="eyebrow">Helpers</div><h1>Helper roster</h1><div class="lede">Every profile carries a full memory timeline, not just a static record.</div></div>
+    <div class="card"><div class="rowlist">${rows}</div></div>`;
+}
+
+/* ---------- Helper detail ---------- */
+function pageHelperDetail(id){
+  recalcAll();
+  const h = S.helpers.find(x=>x.id===id);
+  if(!h) return emptyState('Helper not found','');
+  const sc = SCORES[h.id];
+  const evs = helperEvents(id).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const why = churnWhy(h.id, sc.churn);
+  return `
+  <button class="btn sm" style="margin-bottom:16px;" onclick="nav('helpers')">← Helpers</button>
+  <div class="detail-head">
+    <div class="avatar" style="background:${h.color}">${initials(h.name)}</div>
+    <div>
+      <h1>${h.name}</h1>
+      <div class="tags">
+        <span class="badge neutral">${h.location}</span>
+        <span class="badge neutral">${h.exp} yrs experience</span>
+        <span class="badge neutral">${h.availability}</span>
+        ${h.skills.map(s=>`<span class="badge neutral">${roleLabel(s)}</span>`).join('')}
+      </div>
+    </div>
+  </div>
+  <div class="grid g3" style="margin-bottom:24px;">
+    <div class="metric"><div class="label">Trust signal</div><div class="num ${sc.trust<60?'warn':'ok'}">${sc.trust}</div><span class="badge ${trustBadgeClass(sc.trust)}" style="margin-top:8px;">${trustBand(sc.trust)}</span></div>
+    <div class="metric"><div class="label">Churn risk</div><div class="num ${sc.churn>=55?'warn':'ok'}">${sc.churn}</div><span class="badge ${churnBadgeClass(sc.churn)}" style="margin-top:8px;">${sc.churn>=65?'Critical':sc.churn>=40?'Elevated':'Low'}</span></div>
+    <div class="metric"><div class="label">Role-specific fit</div><div style="margin-top:8px; font-size:12px;">${Object.entries(h.roleScores).map(([k,v])=>`<div class="kv"><span class="k">${roleLabel(k)}</span><span>${v}/100</span></div>`).join('')}</div></div>
+  </div>
+  <div class="grid g2">
+    <div class="section" style="margin:0;">
+      <h2>Memory timeline</h2>
+      <div class="card"><div class="timeline">
+        ${evs.map(e=>`<div class="tl-item ${eventTone(e.type)}"><div class="date">${fmtDate(e.date)}</div><div class="txt">${e.description}</div><div class="tag">${e.type.replace('_',' ')}${e.severity? ' · '+e.severity:''}</div></div>`).join('')}
+      </div></div>
+    </div>
+    <div class="section" style="margin:0;">
+      <h2>Why this score?</h2>
+      <div class="why">
+        <h4>Why is churn risk ${sc.churn}?</h4>
+        <ul>${why.map(w=>`<li>${w}</li>`).join('')}</ul>
+        <div class="action">Recommended action: <b>${sc.churn>=75?'Escalate to coordinator.':sc.churn>=55?'Schedule coaching call.':'Continue routine monitoring.'}</b></div>
+      </div>
+      <div class="hr"></div>
+      <h2>Simulate an event</h2>
+      <div class="card">
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <select id="evType">
+            <option value="late_arrival">Late arrival</option>
+            <option value="complaint">Complaint</option>
+            <option value="positive_feedback">Positive feedback</option>
+            <option value="placement_failure">Placement failure</option>
+            <option value="successful_placement">Successful placement</option>
+          </select>
+          <button class="btn brass sm" id="simBtn">Simulate new event</button>
+        </div>
+        <div style="font-size:11.5px; color:var(--ink-soft); margin-top:8px;">Watch the Agent Activity ticker above as this propagates through Memory → Decision → Reflection → Action.</div>
+      </div>
+      <div class="hr"></div>
+      <h2>Actions</h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn primary sm" id="coachBtn">Start coaching call</button>
+        ${sc.churn>=75? `<button class="btn sm" style="border-color:var(--rust); color:var(--rust);" id="escalateBtn">Escalate to coordinator</button>` : ''}
+        <button class="btn sm" onclick="nav('memory','${h.id}')">View in Hindsight Core</button>
+      </div>
+    </div>
+  </div>`;
+}
+function eventTone(type){
+  if(['complaint','negative_feedback','placement_failure'].includes(type)) return type==='placement_failure'?'bad':'warn';
+  if(type==='positive_feedback'||type==='successful_placement'||type==='coaching_completed') return 'ok';
+  return '';
+}
+function churnWhy(helperId, churnScore){
+  const evs = helperEvents(helperId).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const reasons = [];
+  const lateCount = evs.filter(e=>e.type==='late_arrival').length;
+  const complaintCount = evs.filter(e=>e.type==='complaint').length;
+  const unresolved = evs.filter(e=>e.type==='complaint').length - evs.filter(e=>e.type==='coaching_completed').length;
+  if(lateCount) reasons.push(`${lateCount} late arrival${lateCount>1?'s':''} on record.`);
+  if(complaintCount) reasons.push(`${complaintCount} complaint${complaintCount>1?'s':''} on record.`);
+  if(unresolved>0) reasons.push(`${unresolved} concern${unresolved>1?'s':''} without a logged follow-up.`);
+  if(evs.length && evs[0] && (evs[0].type==='late_arrival'||evs[0].type==='complaint')) reasons.push('Attendance trend is recent, not historical.');
+  if(!reasons.length) reasons.push('No adverse signals in the recent window; risk reflects baseline variance.');
+  return reasons;
+}
+function wireHelperDetail(id){
+  const btn = document.getElementById('simBtn');
+  if(btn) btn.onclick = ()=>{
+    const type = document.getElementById('evType').value;
+    const h = S.helpers.find(x=>x.id===id);
+    const placement = S.placements.find(p=>p.helperId===id && p.status==='active');
+    triggerEvent(type, id, placement?placement.householdId:null);
+  };
+  const coach = document.getElementById('coachBtn');
+  if(coach) coach.onclick = ()=>{
+    const placement = S.placements.find(p=>p.helperId===id && p.status==='active');
+    startCall('coaching', id, placement?placement.householdId:null, 'Manually initiated from profile.');
+  };
+  const esc = document.getElementById('escalateBtn');
+  if(esc) esc.onclick = ()=>{
+    const placement = S.placements.find(p=>p.helperId===id && p.status==='active');
+    startCall('escalation', id, placement?placement.householdId:null, 'Manually escalated from profile — critical churn risk.');
+  };
+}
+
+/* ---------- Households list ---------- */
+function pageHouseholds(){
+  recalcAll();
+  const rows = S.households.map(h=>{
+    const sc = SCORES[h.id];
+    const placementCount = S.placements.filter(p=>p.householdId===h.id).length;
+    return `<div class="rowitem" onclick="nav('householdDetail','${h.id}')">
+      <div class="avatar" style="background:#31507A">${initials(h.name)}</div>
+      <div class="meta"><div class="name">${h.name}</div><div class="sub">${h.location} · needs ${roleLabel(h.requirement)} · ${placementCount} placement(s) on record</div></div>
+      <div class="scores"><div class="scorepill"><div class="v">${sc.difficulty}</div><div class="l">Difficulty</div></div></div>
+      <span class="badge ${diffBadgeClass(sc.difficulty)}">${sc.difficulty>=65?'High difficulty':sc.difficulty>=40?'Watch':'Stable'}</span>
+    </div>`;
+  }).join('');
+  return `<div class="pagehead"><div class="eyebrow">Households</div><h1>Household roster</h1><div class="lede">The system evaluates both sides of every placement relationship.</div></div>
+    <div class="card"><div class="rowlist">${rows}</div></div>`;
+}
+
+/* ---------- Household detail ---------- */
+function pageHouseholdDetail(id){
+  recalcAll();
+  const hh = S.households.find(x=>x.id===id);
+  if(!hh) return emptyState('Household not found','');
+  const sc = SCORES[hh.id];
+  const placements = S.placements.filter(p=>p.householdId===id);
+  const evs = householdEvents(id).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const reflections = S.reflections.filter(r=>r.entityId===id);
+  const replacements = placements.filter(p=>p.status==='failed'||p.status==='ended_poor_fit').length;
+  return `
+  <button class="btn sm" style="margin-bottom:16px;" onclick="nav('households')">← Households</button>
+  <div class="detail-head">
+    <div class="avatar" style="background:#31507A">${initials(hh.name)}</div>
+    <div><h1>${hh.name}</h1>
+      <div class="tags">
+        <span class="badge neutral">${hh.location}</span>
+        <span class="badge neutral">Needs ${roleLabel(hh.requirement)}</span>
+        <span class="badge neutral">${hh.schedule}</span>
+      </div>
+    </div>
+  </div>
+  <div class="grid g3" style="margin-bottom:24px;">
+    <div class="metric"><div class="label">Household difficulty</div><div class="num ${sc.difficulty>=55?'warn':'ok'}">${sc.difficulty}</div><span class="badge ${diffBadgeClass(sc.difficulty)}" style="margin-top:8px;">${sc.difficulty>=65?'High':sc.difficulty>=40?'Watch':'Stable'}</span></div>
+    <div class="metric"><div class="label">Placements on record</div><div class="num">${placements.length}</div></div>
+    <div class="metric"><div class="label">Replacements requested</div><div class="num ${replacements>=2?'warn':''}">${replacements}</div></div>
+  </div>
+  <div class="grid g2">
+    <div class="section" style="margin:0;">
+      <h2>Placement history</h2>
+      <div class="card"><div class="rowlist">
+        ${placements.map(p=>{
+          const helper = S.helpers.find(x=>x.id===p.helperId);
+          return `<div class="rowitem" style="cursor:pointer;" onclick="nav('helperDetail','${p.helperId}')">
+            <div class="avatar" style="background:${helper?helper.color:'#888'}">${helper?initials(helper.name):'?'}</div>
+            <div class="meta"><div class="name">${helper?helper.name:p.helperId}</div><div class="sub">${roleLabel(p.role)} · ${fmtDate(p.start)} – ${p.end?fmtDate(p.end):'ongoing'}</div></div>
+            <span class="badge ${p.status==='active'?'ok':(p.status==='failed'||p.status==='ended_poor_fit')?'bad':'neutral'}">${p.status.replace('_',' ')}</span>
+          </div>`;
+        }).join('')}
+      </div></div>
+      <div class="hr"></div>
+      <h2>Memory timeline</h2>
+      <div class="card"><div class="timeline">
+        ${evs.map(e=>`<div class="tl-item ${eventTone(e.type)}"><div class="date">${fmtDate(e.date)}</div><div class="txt">${e.description}</div></div>`).join('')}
+      </div></div>
+    </div>
+    <div class="section" style="margin:0;">
+      <h2>Reflection insights</h2>
+      ${reflections.length? reflections.map(reflCard).join('') : `<div class="card">${emptyState('No reflections yet.','')}<div style="text-align:center;"><button class="btn brass sm" id="runReflectBtn">Run reflection agent</button></div></div>`}
+      ${reflections.length? `<div style="margin-top:10px;"><button class="btn sm" id="runReflectBtn2">Re-run reflection</button></div>`:''}
+      <div class="hr"></div>
+      <h2>Voice Agent</h2>
+      <div class="card">
+        <div style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;">Household check-in calls are an event source in their own right — the outcome is retained into memory the same as an app or WhatsApp event.</div>
+        <button class="btn sm" id="checkinBtn">Simulate household check-in call</button>
+      </div>
+      ${stagedBackupCard(id)}
+    </div>
+  </div>`;
+}
+function stagedBackupCard(householdId){
+  const b = S.stagedBackups.find(x=>x.householdId===householdId && x.status==='staged');
+  if(!b) return '';
+  const backup = S.helpers.find(h=>h.id===b.backupHelperId);
+  const atRisk = S.helpers.find(h=>h.id===b.atRiskHelperId);
+  return `<div class="hr"></div><h2>Matching Agent</h2>
+    <div class="card" style="border-left:3px solid var(--brass);">
+      <div style="font-weight:600; font-size:13px;">Backup helper pre-staged</div>
+      <div style="font-size:12.5px; color:var(--ink-soft); margin-top:4px;">${backup?backup.name:'—'} (match score ${b.score}/100) staged as backup, in case ${atRisk?atRisk.name:'the current helper'}'s placement needs replacement.</div>
+    </div>`;
+}
+function reflCard(r){
+  const cls = r.classification==='FACT'?'ok':r.classification==='OBSERVATION'?'warn':'neutral';
+  return `<div class="card" style="margin-bottom:10px;">
+    <span class="badge ${cls}">${r.classification}</span>
+    <p style="margin-top:8px; font-size:13px;">${r.insight}</p>
+    ${r.evidence && r.evidence.length? `<div class="hr"></div><div style="font-size:11.5px; color:var(--ink-soft);"><b>Evidence</b><ul style="margin:6px 0 0; padding-left:16px;">${r.evidence.map(e=>`<li>${e}</li>`).join('')}</ul></div>`:''}
+  </div>`;
+}
+function wireHouseholdDetail(id){
+  const b1 = document.getElementById('runReflectBtn');
+  const b2 = document.getElementById('runReflectBtn2');
+  [b1,b2].forEach(b=>{ if(b) b.onclick = ()=> reflectOnHousehold(id); });
+  const ci = document.getElementById('checkinBtn');
+  if(ci) ci.onclick = ()=>{
+    const placement = S.placements.find(p=>p.householdId===id && p.status==='active');
+    startCall('checkin', placement?placement.helperId:null, id, 'Voice check-in call — event source.');
+  };
+}
+
+/* ---------- Placements ---------- */
+function pagePlacements(){
+  const rows = S.placements.map(p=>{
+    const helper = S.helpers.find(h=>h.id===p.helperId);
+    const hh = S.households.find(h=>h.id===p.householdId);
+    return `<div class="rowitem" style="cursor:default;">
+      <div class="avatar" style="background:${helper?helper.color:'#888'}">${helper?initials(helper.name):'?'}</div>
+      <div class="meta"><div class="name">${helper?helper.name:''} → ${hh?hh.name:''}</div><div class="sub">${roleLabel(p.role)} · ${fmtDate(p.start)} – ${p.end?fmtDate(p.end):'ongoing'}</div></div>
+      <span class="badge ${p.status==='active'?'ok':(p.status==='failed'||p.status==='ended_poor_fit')?'bad':'neutral'}">${p.status.replace('_',' ')}</span>
+    </div>`;
+  }).join('');
+  return `<div class="pagehead"><div class="eyebrow">Placements</div><h1>All placements</h1></div><div class="card"><div class="rowlist">${rows}</div></div>`;
+}
+
+/* ---------- Memory Explorer ---------- */
+let memSelected = null, memTab = 'world';
+const NETWORK_META = {
+  world:{name:'World Network', desc:'Stable facts written once — who a helper is, what a household needs.'},
+  experience:{name:'Experience Network', desc:'Retain writes every event here — attendance, complaints, feedback, calls.'},
+  opinion:{name:'Opinion Network', desc:'Where the Decision Agent writes Trust + Churn-risk scores — derived, not absolute.'},
+  observation:{name:'Observation Network', desc:'Where the Reflection Agent writes cross-placement patterns after Hindsight Reflect / LLM synthesis.'},
+};
+function globalNetworkCount(layer){
+  ensureWorldMemory();
+  let n = 0;
+  Object.values(MEM).forEach(m=> n += m[layer].length);
+  return n;
+}
+function pageMemory(){
+  ensureWorldMemory();
+  if(!memSelected) memSelected = route.param || 'anita';
+  const m = memOf(memSelected);
+  const tabs = ['world','experience','opinion','observation'];
+  return `
+  <div class="pagehead"><div class="eyebrow">Hindsight Core</div><h1>Retain · Recall · Reflect</h1><div class="lede">One write path — Retain — fans out into four networks, each with a different epistemic status. This is the differentiator over a plain database.</div></div>
+  <div class="netgrid">
+    ${tabs.map(t=>`<div class="netcyl ${t===memTab?'active-net':''}"><div class="nicon"></div><div class="nname">${NETWORK_META[t].name}</div><div class="ncount">${globalNetworkCount(t)}</div><div class="ndesc">${NETWORK_META[t].desc}</div></div>`).join('')}
+  </div>
+  <div class="section" style="margin-bottom:12px;"><h2 style="font-size:13px; color:var(--ink-soft); font-weight:600;">Inspect by entity</h2></div>
+  <div style="margin-bottom:16px;">
+    <select id="memEntitySelect">
+      <optgroup label="Helpers">${S.helpers.map(h=>`<option value="${h.id}" ${h.id===memSelected?'selected':''}>${h.name}</option>`).join('')}</optgroup>
+      <optgroup label="Households">${S.households.map(h=>`<option value="${h.id}" ${h.id===memSelected?'selected':''}>${h.name}</option>`).join('')}</optgroup>
+    </select>
+  </div>
+  <div class="tabs">${tabs.map(t=>`<button data-tab="${t}" class="${t===memTab?'active':''}">${NETWORK_META[t].name} <span style="color:var(--ink-faint); font-weight:400;">(${m[t].length})</span></button>`).join('')}</div>
+  <div class="card" id="memBody">${memBody(m, memTab)}</div>
+  `;
+}
+function memBody(m, tab){
+  const desc = {
+    world:'Stable facts — who they are, what they do, what a household needs.',
+    experience:'Things that happened — attendance, complaints, feedback, calls.',
+    opinion:'Derived assessments the system holds — treated as beliefs, not absolute truth.',
+    observation:'Higher-level patterns discovered by the Reflection Agent across many experiences.',
+  };
+  const entries = m[tab];
+  return `<div style="font-size:12px; color:var(--ink-soft); margin-bottom:12px;">${desc[tab]}</div>
+    ${entries.length? entries.slice().reverse().map(e=>`<div class="mem-entry"><div class="k">${e.t||''}</div><div>${e.text}</div></div>`).join('') : emptyState('No '+tab+' memory yet.', tab==='world'? 'World facts are seeded from the profile.' : 'Trigger an event, run reflection, or place a call to populate this layer.')}`;
+}
+function wireMemory(){
+  ensureWorldMemory();
+  const sel = document.getElementById('memEntitySelect');
+  sel.onchange = ()=>{ memSelected = sel.value; renderCurrentPage(); };
+  document.querySelectorAll('.tabs button').forEach(b=>{
+    b.onclick = ()=>{ memTab = b.dataset.tab; renderCurrentPage(); };
+  });
+}
+function ensureWorldMemory(){
+  // populate world facts lazily the first time each entity is viewed
+  S.helpers.forEach(h=>{
+    const m = memOf(h.id);
+    if(!m.world.length){
+      m.world.push({text:`${h.name} has ${h.exp} years of experience.`, t:''});
+      m.world.push({text:`Skills: ${h.skills.map(roleLabel).join(', ')}.`, t:''});
+      m.world.push({text:`Based in ${h.location}. Availability: ${h.availability}.`, t:''});
+    }
+    if(!m.opinion.length){
+      const best = Object.entries(h.roleScores).sort((a,b)=>b[1]-a[1])[0];
+      m.opinion.push({text:`Strong ${roleLabel(best[0])} fit, based on historical placement outcomes.`, t:''});
+    }
+  });
+  S.households.forEach(h=>{
+    const m = memOf(h.id);
+    if(!m.world.length){
+      m.world.push({text:`${h.name} is located in ${h.location}.`, t:''});
+      m.world.push({text:`Current requirement: ${roleLabel(h.requirement)}. Schedule: ${h.schedule}.`, t:''});
+    }
+  });
+}
+
+/* ---------- Matching ---------- */
+let matchingState = {role:'elder_care', householdId:'h106', results:null, naive:false};
+function pageMatching(){
+  const results = matchingState.results;
+  return `
+  <div class="pagehead"><div class="eyebrow">Matching</div><h1>Find the best match</h1><div class="lede">Ranking is never age, gender or a static profile field alone — it draws on memory.</div></div>
+  <div class="card" style="margin-bottom:20px;">
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <select id="mHousehold">${S.households.map(h=>`<option value="${h.id}" ${h.id===matchingState.householdId?'selected':''}>${h.name}</option>`).join('')}</select>
+      <select id="mRole">
+        ${['elder_care','child_care','cleaning','cooking'].map(r=>`<option value="${r}" ${r===matchingState.role?'selected':''}>${roleLabel(r)}</option>`).join('')}
+      </select>
+      <button class="btn primary" id="findBtn">Find best match</button>
+    </div>
+  </div>
+  ${results? matchingResults(results) : emptyState('No search run yet.','Choose a household requirement above and click "Find best match."')}
+  `;
+}
+function matchingResults(results){
+  const top = results[0];
+  return `
+  <div class="section">
+    <h2>Recommended match</h2>
+    <div class="candidate top" style="margin-bottom:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div><div class="rank">Recommended</div><div class="mname">${top.helper.name}</div></div>
+        <div class="mscore">${top.score}<span style="font-size:14px; color:var(--ink-soft);">/100</span></div>
+      </div>
+      <div class="facts">
+        <div>Trust: <b>${top.trust}</b></div><div>Churn risk: <b>${top.churn}</b></div>
+        <div>Role fit: <b>${top.roleFit}</b></div><div>Experience: <b>${top.helper.exp} yrs</b></div>
+      </div>
+      <ul class="why-list">
+        ${matchWhy(top).map(w=>`<li>${w}</li>`).join('')}
+      </ul>
+      <div class="hr"></div>
+      <div style="font-size:11.5px; color:var(--ink-soft);"><b>Memory evidence</b>
+      <div class="timeline" style="margin-top:10px;">
+        ${helperEvents(top.helper.id).filter(e=>['positive_feedback','negative_feedback','complaint'].includes(e.type)).slice(0,4).map(e=>`<div class="tl-item ${eventTone(e.type)}"><div class="date">${fmtDate(e.date)}</div><div class="txt">${e.description}</div></div>`).join('') || '<div style="padding-left:4px;">No feedback events on record yet.</div>'}
+      </div></div>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Other candidates</h2>
+    <div class="grid g3">
+      ${results.slice(1,4).map((r,i)=>`
+        <div class="candidate">
+          <div class="rank">Candidate ${i+2}</div>
+          <div class="mname">${r.helper.name}</div>
+          <div class="mscore" style="font-size:20px;">${r.score}<span style="font-size:12px; color:var(--ink-soft);">/100</span></div>
+          <div class="facts"><div>Trust: <b>${r.trust}</b></div><div>Churn: <b>${r.churn}</b></div></div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+function matchWhy(r){
+  const w = [];
+  if(r.roleFit>=75) w.push(`Consistently positive ${roleLabel(matchingState.role)} outcomes on record.`);
+  if(r.trust>=75) w.push('Strong attendance and reliability history.');
+  if(r.churn<=30) w.push('Low churn risk based on recent trend.');
+  if(!w.length) w.push('Best available balance of role fit, trust and stability among current candidates.');
+  return w;
+}
+function wireMatching(){
+  document.getElementById('findBtn').onclick = ()=>{
+    matchingState.householdId = document.getElementById('mHousehold').value;
+    matchingState.role = document.getElementById('mRole').value;
+    matchingState.results = findMatches(matchingState.role, matchingState.householdId, {naive:matchingState.naive});
+    renderCurrentPage();
+  };
+}
+
+/* ---------- Insights ---------- */
+function pageInsights(){
+  const groups = {
+    'Patterns discovered': S.reflections.filter(r=>r.classification==='OBSERVATION'),
+    'Root-cause hypotheses': S.reflections.filter(r=>r.classification==='HYPOTHESIS'),
+    'Confirmed facts': S.reflections.filter(r=>r.classification==='FACT'),
+  };
+  return `<div class="pagehead"><div class="eyebrow">Insights</div><h1>What the Reflection Agent has found</h1><div class="lede">Every insight is labelled by how strongly the evidence supports it.</div></div>
+    ${Object.entries(groups).map(([title, items])=>`
+      <div class="section"><h2>${title}</h2>
+        ${items.length? items.map(reflCard).join('') : `<div class="card">${emptyState('Nothing here yet.','Run a reflection from a helper or household profile, or via Demo Mode.')}</div>`}
+      </div>`).join('')}
+  `;
+}
+
+/* ---------- Voice Center ---------- */
+function pageVoice(){
+  return `<div class="pagehead"><div class="eyebrow">Voice Agent — Vapi / Bland</div><h1>Coaching, check-ins and escalations</h1><div class="lede">Household check-in calls are an event source that feeds Retain; coaching and escalation calls are actions triggered by the Trust + Churn-risk score. Every call recalls history first, and every outcome is retained afterward.</div></div>
+  <div class="card" style="margin-bottom:20px;">
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+      <select id="vHelper">${S.helpers.map(h=>`<option value="${h.id}">${h.name}</option>`).join('')}</select>
+      <select id="vType"><option value="coaching">Coaching call</option><option value="checkin">Household check-in</option><option value="escalation">Escalation call</option></select>
+      <button class="btn primary" id="callBtn">Place call</button>
+    </div>
+  </div>
+  <div class="section"><h2>Call history</h2>
+    ${S.calls.length? S.calls.map(callCard).join('') : `<div class="card">${emptyState('No calls yet.','Place a call above, or trigger a churn-risk event to have the Voice Agent recommend one.')}</div>`}
+  </div>`;
+}
+function callCard(c){
+  const helper = S.helpers.find(h=>h.id===c.helperId);
+  const hh = S.households.find(h=>h.id===c.householdId);
+  return `<div class="callcard">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div><b>${c.type[0].toUpperCase()+c.type.slice(1)} call</b> ${helper?'· '+helper.name:''} ${hh?'· '+hh.name:''}</div>
+      <span class="simbadge">Voice simulation mode</span>
+    </div>
+    <div style="font-size:12px; color:var(--ink-soft); margin-top:4px;">${c.reason||''} · Sentiment: ${c.sentiment} · Follow-up: ${c.followUp}</div>
+    <div class="transcript">
+      ${c.transcript.map(t=>`<div class="who">${t.who}</div><div>${t.text}</div>`).join('')}
+    </div>
+    <div class="hr"></div>
+    <div style="font-size:12.5px;"><b>Outcome:</b> ${c.summary}</div>
+  </div>`;
+}
+function wireVoice(){
+  document.getElementById('callBtn').onclick = ()=>{
+    const helperId = document.getElementById('vHelper').value;
+    const type = document.getElementById('vType').value;
+    const placement = S.placements.find(p=>p.helperId===helperId && p.status==='active');
+    startCall(type, helperId, placement?placement.householdId:null, 'Manually initiated from Voice Center.');
+  };
+}
+
+/* ---------- Agent Activity ---------- */
+function pageActivity(){
+  return `<div class="pagehead"><div class="eyebrow">Agent Activity</div><h1>Live agent operating log</h1><div class="lede">Every retain, recall, reflection, match and call — in order.</div></div>
+  <div class="card"><div id="activityList">${activityRows()}</div></div>`;
+}
+function activityRows(){
+  if(!S.activity.length) return emptyState('No activity yet.','Trigger an event, run a reflection, or start Demo Mode.');
+  return S.activity.slice(0,150).map(a=>`<div class="activity-row"><div class="t">${a.t}</div><div><span class="agent ${a.agentClass}">${a.agentLabel}</span></div><div>${escapeHtml(a.text)}</div></div>`).join('');
+}
+function renderActivityList(){
+  const el = document.getElementById('activityList');
+  if(el) el.innerHTML = activityRows();
+}
+
+/* ---------- Architecture ---------- */
+function pageArchitecture(){
+  return `<div class="pagehead"><div class="eyebrow">Architecture</div><h1>How the five agents wire together</h1><div class="lede">This mirrors the approved system diagram exactly. Every box below corresponds to a real function in this prototype — open Agent Activity while you use the app to watch these edges fire in order.</div></div>
+  <div class="arch-wrap"><div class="arch-grid">
+    <div class="lane"><h4>Event sources</h4>
+      <div class="node">Voice check-in calls</div>
+      <div class="node">App / WhatsApp events</div>
+      <div class="arrow-note">↓ retain</div>
+    </div>
+    <div class="lane"><h4>Memory Agent — Hindsight Core</h4>
+      <div class="node cyl">Retain: log event</div>
+      <div class="arrow-note">↓ writes to</div>
+      <div class="node">World Network</div>
+      <div class="node">Experience Network</div>
+      <div class="node">Opinion Network</div>
+      <div class="node">Observation Network</div>
+    </div>
+    <div class="lane"><h4>Voice Agent — Vapi / Bland</h4>
+      <div class="node">Household check-in call</div>
+      <div class="arrow-note">↑ feeds Retain</div>
+      <div class="node">Coaching call</div>
+      <div class="node" style="border-color:var(--rust);">Escalation call to coordinator</div>
+    </div>
+    <div class="lane"><h4>Decision Agent</h4>
+      <div class="node">Recall history</div>
+      <div class="node">LLM: complaint severity</div>
+      <div class="node">Trust + Churn-risk score</div>
+      <div class="arrow-note">↓ writes to Opinion Network</div>
+    </div>
+    <div class="lane"><h4>Reflection Agent</h4>
+      <div class="node">Hindsight Reflect / LLM synthesis</div>
+      <div class="node">Cross-placement patterns</div>
+      <div class="arrow-note">↓ writes to Observation Network</div>
+    </div>
+    <div class="lane"><h4>Matching Agent</h4>
+      <div class="node">Score candidates</div>
+      <div class="arrow-note">reads Observation Network</div>
+      <div class="node">Pre-stage backup helper</div>
+    </div>
+    <div class="lane" style="grid-column:1 / -1;"><h4>App layer</h4>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div class="node" style="flex:1; min-width:160px;">Postgres / Supabase — master records, scores, call logs</div>
+        <div class="node cyl" style="flex:1; min-width:160px;">Coordinator Dashboard — receives escalation calls, scores, reflection patterns, staged backups</div>
+      </div>
+    </div>
+  </div></div>
+  <div class="section" style="margin-top:26px;">
+    <h2>Stack</h2>
+    <div class="card"><div class="rowlist" style="gap:0;">
+      ${archRow('Memory core','Hindsight (Vectorize) — Retain / Recall / Reflect','The World / Experience / Opinion / Observation model is the differentiator vs. a plain database. Simulated here via the network views above.')}
+      ${archRow('Backend / orchestration','Python + FastAPI','Async, fastest path to wiring LLM + Hindsight calls — no heavyweight agent framework for 5 fixed agents.')}
+      ${archRow('LLM inference','Groq API (GPT-OSS-120B / Qwen-32B)','Fast enough for live-demo latency. Simulated here with deterministic fallbacks, per the demo-reliability requirement.')}
+      ${archRow('App database','Postgres via Supabase','Holds master records, scores and call logs — Hindsight holds the memory, Postgres holds app state.')}
+      ${archRow('Voice agent','Vapi.ai or Bland.ai','STT+LLM+TTS+telephony in one call. This prototype runs "voice simulation mode" in-browser.')}
+      ${archRow('Frontend','Next.js + Tailwind on Vercel','Fast to ship, instant shareable demo link. This prototype is a single static HTML build of the same UI.')}
+      ${archRow('Scoring logic','Deterministic formulas + targeted LLM calls','No custom ML model — trust/churn/difficulty are transparent formulas; severity and synthesis are the only LLM calls.')}
+      ${archRow('Auth','Supabase Auth','One login for the demo agency account.')}
+    </div></div>
+  </div>`;
+}
+function archRow(layer, choice, why){
+  return `<div class="rowitem" style="cursor:default; align-items:flex-start;">
+    <div class="meta" style="flex:0 0 160px;"><div class="name">${layer}</div></div>
+    <div class="meta"><div class="sub" style="color:var(--ink); font-weight:600; font-size:12.5px;">${choice}</div><div class="sub" style="margin-top:3px;">${why}</div></div>
+  </div>`;
+}
+
+/* ---------- Settings ---------- */
+function pageSettings(){
+  return `<div class="pagehead"><div class="eyebrow">Settings</div><h1>Environment</h1><div class="lede">This browser prototype runs entirely client-side. In a full deployment these would be backend-managed integrations — see Architecture for the full stack rationale.</div></div>
+  <div class="card">
+    ${['Hindsight (Vectorize) — memory core','Groq LLM — severity, reflection synthesis','Vapi / Bland — voice agent','Postgres via Supabase — app database','Supabase Auth'].map(s=>`<div class="kv"><span class="k">${s}</span><span class="badge neutral">Local simulation mode</span></div>`).join('')}
+  </div>`;
+}
+
+/* =========================================================================
+   DEMO MODE
+   ========================================================================= */
+const FLOW_STAGES = ['Event','Memory','Reasoning','Risk','Action','Outcome','Learning'];
+let demoRunning = false;
+
+function pageDemo(){
+  return `<div class="pagehead"><div class="eyebrow">Demo Mode</div><h1>Remember → Understand → Predict → Act → Learn</h1><div class="lede">Three controlled, end-to-end stories. Each one runs the full agent chain and updates real state across the app.</div></div>
+  <div class="grid g3" style="margin-bottom:28px;">
+    <button class="scenario-btn" data-scn="1"><div class="snum">Scenario 1</div><h3>Save the placement</h3><div class="stag">Prevent churn before it happens</div></button>
+    <button class="scenario-btn" data-scn="2"><div class="snum">Scenario 2</div><h3>Fair blame</h3><div class="stag">Maybe the household is the problem</div></button>
+    <button class="scenario-btn" data-scn="3"><div class="snum">Scenario 3</div><h3>Learn the role</h3><div class="stag">Memory makes matching smarter</div></button>
+  </div>
+  <div class="flow" id="flowBar">${FLOW_STAGES.map(s=>`<div class="fstep" data-stage="${s}">${s}</div>`).join('')}</div>
+  <div id="demoBody">
+    <div class="narration" id="narration"><div class="ln sys">Choose a scenario above to begin.</div></div>
+  </div>`;
+}
+function wireDemo(){
+  document.querySelectorAll('.scenario-btn').forEach(b=>{
+    b.onclick = ()=>{
+      if(demoRunning) return;
+      const n = b.dataset.scn;
+      if(n==='1') runScenario1();
+      if(n==='2') runScenario2();
+      if(n==='3') runScenario3();
+    };
+  });
+}
+function setStage(stage){
+  document.querySelectorAll('#flowBar .fstep').forEach(el=>{
+    const idx = FLOW_STAGES.indexOf(el.dataset.stage);
+    const cur = FLOW_STAGES.indexOf(stage);
+    el.classList.toggle('active', el.dataset.stage===stage);
+    el.classList.toggle('done', idx<cur);
+  });
+}
+function narrate(line, cls){
+  const n = document.getElementById('narration');
+  if(!n) return;
+  const div = document.createElement('div');
+  div.className = 'ln'+(cls?(' '+cls):'');
+  div.innerHTML = line;
+  n.appendChild(div);
+  n.scrollTop = n.scrollHeight;
+}
+function resetNarration(){
+  const n = document.getElementById('narration');
+  if(n) n.innerHTML = '';
+}
+function step(fn, delay){ return new Promise(res=> setTimeout(()=>{ fn(); res(); }, delay)); }
+
+async function runScenario1(){
+  demoRunning = true;
+  resetNarration();
+  const helperId='anita';
+  const placement = S.placements.find(p=>p.helperId===helperId && p.status==='active');
+  const householdId = placement.householdId;
+  recalcAll();
+  const before = SCORES[helperId].churn;
+
+  setStage('Event');
+  narrate(`<b>SCENARIO 1 — Save the Placement.</b> Starting state: ${labelFor(helperId)} — Trust ${SCORES[helperId].trust}, Churn risk ${before}.`, 'sys');
+  await step(()=>{}, 500);
+  narrate(`<span class="agent-tag">EVENT</span> Late arrival reported.`);
+  const r1 = triggerEvent('late_arrival', helperId, householdId);
+  await step(()=>{}, 700);
+
+  setStage('Memory');
+  narrate(`<span class="agent-tag">MEMORY AGENT</span> Retained event to ${labelFor(helperId)}'s experience memory.`);
+  await step(()=>{}, 600);
+  narrate(`<span class="agent-tag">EVENT</span> Second late arrival, this time with a complaint.`);
+  const r2 = triggerEvent('complaint', helperId, householdId);
+  await step(()=>{}, 700);
+
+  setStage('Reasoning');
+  narrate(`<span class="agent-tag">DECISION AGENT</span> Recalled full history and classified severity: MEDIUM.`);
+  await step(()=>{}, 600);
+
+  setStage('Risk');
+  narrate(`<span class="agent-tag">DECISION AGENT</span> Churn risk recalculated: ${before} → ${SCORES[helperId].churn}.`);
+  await step(()=>{}, 400);
+  narrate(`<span class="agent-tag">DECISION AGENT</span> Score written into the Opinion Network — a derived belief, not a raw fact.`);
+  await step(()=>{}, 500);
+  const why = churnWhy(helperId, SCORES[helperId].churn);
+  narrate(`<span class="agent-tag">WHY?</span> ${why.join(' ')}`);
+  await step(()=>{}, 700);
+
+  setStage('Action');
+  narrate(`<span class="agent-tag">REFLECTION AGENT</span> Deteriorating attendance trend confirmed against history.`);
+  await step(()=>{}, 500);
+  const isCritical = SCORES[helperId].churn>=75;
+  narrate(`<span class="agent-tag">VOICE AGENT</span> Recommended action: ${isCritical? 'escalate to the coordinator.':'initiate coaching call.'}`);
+  await step(()=>{}, 800);
+  narrate(`<span class="agent-tag">VOICE AGENT</span> Placing ${isCritical?'escalation':'coaching'} call — voice simulation mode.`);
+  const call = startCall(isCritical?'escalation':'coaching', helperId, householdId, 'Triggered by churn-risk escalation (Demo Scenario 1).');
+  await step(()=>{}, 900);
+  if(S.stagedBackups.find(b=>b.householdId===householdId && b.status==='staged')){
+    const b = S.stagedBackups.find(x=>x.householdId===householdId && x.status==='staged');
+    const backup = S.helpers.find(h=>h.id===b.backupHelperId);
+    narrate(`<span class="agent-tag">MATCHING AGENT</span> Read the Observation Network and pre-staged ${backup?backup.name:'a backup helper'} in case this placement needs replacement.`);
+    await step(()=>{}, 700);
+  }
+
+  setStage('Outcome');
+  narrate(`<span class="agent-tag">OUTCOME</span> ${call.summary}`);
+  await step(()=>{}, 600);
+
+  setStage('Learning');
+  narrate(`<span class="agent-tag">MEMORY AGENT</span> Call outcome retained. Churn risk reassessed: now ${SCORES[helperId].churn}.`);
+  narrate(`<b>Future decisions</b> — the next event for ${labelFor(helperId)} will be evaluated against this updated history, including the coaching commitment.`, 'sys');
+  narrate(`<a href="#" onclick="nav('helperDetail','${helperId}'); return false;" style="color:#fff; text-decoration:underline;">Open ${labelFor(helperId)}'s profile to see the full timeline →</a>`, 'sys');
+  demoRunning = false;
+}
+
+async function runScenario2(){
+  demoRunning = true;
+  resetNarration();
+  const householdId = 'h104';
+  setStage('Event');
+  narrate(`<b>SCENARIO 2 — Fair Blame.</b> Household: ${labelFor(householdId)}. Three placements on record, three different helpers, three replacements.`, 'sys');
+  await step(()=>{}, 600);
+
+  setStage('Memory');
+  narrate(`<span class="agent-tag">MEMORY AGENT</span> Recalling placement history across Sunita Devi, Kavita Reddy and Fatima Sheikh.`);
+  await step(()=>{}, 700);
+
+  setStage('Reasoning');
+  narrate(`<span class="agent-tag">REFLECTION AGENT</span> Comparing complaint themes across all three placements.`);
+  const refl = reflectOnHousehold(householdId);
+  await step(()=>{}, 700);
+  narrate(`<span class="agent-tag">PATTERN DETECTED</span> ${refl.insight}`);
+  await step(()=>{}, 700);
+
+  setStage('Risk');
+  narrate(`<span class="agent-tag">DECISION AGENT</span> Household Difficulty Score: ${SCORES[householdId].difficulty}/100.`);
+  await step(()=>{}, 600);
+
+  setStage('Action');
+  narrate(`<span class="agent-tag">SYSTEM</span> The system evaluates both sides of the placement relationship.`);
+  document.getElementById('demoBody').insertAdjacentHTML('beforeend', compareBlock());
+  await step(()=>{}, 700);
+
+  setStage('Outcome');
+  narrate(`<span class="agent-tag">OUTCOME</span> Household flagged for coordinator review — evidence-based, not accusatory.`);
+  await step(()=>{}, 600);
+
+  setStage('Learning');
+  narrate(`<span class="agent-tag">MEMORY AGENT</span> Observation stored to ${labelFor(householdId)}'s memory for future matching decisions.`);
+  narrate(`<a href="#" onclick="nav('householdDetail','${householdId}'); return false;" style="color:#fff; text-decoration:underline;">Open ${labelFor(householdId)}'s profile →</a>`, 'sys');
+  demoRunning = false;
+}
+function compareBlock(){
+  return `<div class="compare">
+    <div class="box old"><h4>Previous approach</h4><p style="font-size:13px;">"Replace the helper."</p></div>
+    <div class="box new"><h4>TrustMemory approach</h4><p style="font-size:13px;">"Investigate the relationship pattern — three different helpers reported the same schedule friction."</p></div>
+  </div>`;
+}
+
+async function runScenario3(){
+  demoRunning = true;
+  resetNarration();
+  const helperId = 'priya';
+  const householdId = 'h106';
+  setStage('Event');
+  narrate(`<b>SCENARIO 3 — Memory Makes Matching Smarter.</b> New requirement at ${labelFor(householdId)}: elder care.`, 'sys');
+  await step(()=>{}, 600);
+
+  setStage('Memory');
+  narrate(`<span class="agent-tag">MATCHING AGENT</span> Interaction 1 — generic ranking, ignoring role-specific history.`);
+  const naive = findMatches('elder_care', householdId, {naive:true});
+  await step(()=>{}, 700);
+  narrate(`<span class="agent-tag">RESULT</span> Top candidate (generic): ${naive[0].helper.name}, ${labelForShort(helperId)} ranked #${naive.findIndex(r=>r.helper.id===helperId)+1}.`);
+  await step(()=>{}, 800);
+
+  setStage('Reasoning');
+  narrate(`<span class="agent-tag">REFLECTION AGENT</span> Comparing ${labelFor(helperId)}'s outcomes by role.`);
+  const refl = reflectOnRoleFit(helperId);
+  await step(()=>{}, 600);
+  narrate(`<span class="agent-tag">OBSERVATION</span> ${refl.insight}`);
+  await step(()=>{}, 700);
+
+  setStage('Risk');
+  narrate(`<span class="agent-tag">MATCHING AGENT</span> Interaction 20 — re-ranking with role-specific memory.`);
+  const smart = findMatches('elder_care', householdId, {naive:false});
+  matchingState = {role:'elder_care', householdId, results:smart, naive:false};
+  await step(()=>{}, 700);
+
+  setStage('Action');
+  narrate(`<span class="agent-tag">RESULT</span> ${smart[0].helper.name} rises to top match, score ${smart[0].score}/100.`);
+  await step(()=>{}, 700);
+
+  setStage('Outcome');
+  narrate(`<span class="agent-tag">WHY?</span> Recommended because historical memory shows strong elder-care outcomes, low churn risk, and consistent positive feedback.`);
+  await step(()=>{}, 600);
+
+  setStage('Learning');
+  narrate(`<span class="agent-tag">MEMORY AGENT</span> Role-fit observation stored — future elder-care requirements will use this evidence automatically.`);
+  narrate(`<a href="#" onclick="nav('matching'); return false;" style="color:#fff; text-decoration:underline;">Open Matching to see the full recommendation →</a>`, 'sys');
+  demoRunning = false;
+}
+
+/* =========================================================================
+   BOOT
+   ========================================================================= */
+function buildNav(){
+  const el = document.getElementById('navlist');
+  el.innerHTML = NAV.map(n=>`<button data-id="${n.id}"><span class="dot"></span>${n.label}</button>`).join('');
+  el.querySelectorAll('button').forEach((b,i)=>{
+    b.onclick = ()=> nav(NAV[i].id, null);
+  });
+}
+function resetDemo(){
+  S = clone(INITIAL);
+  MEM = {};
+  SCORES = {};
+  clockTick = 0;
+  recalcAll();
+  log('mem','MEMORY AGENT', 'Demo reset — all scores, events, calls and reflections restored to initial state.');
+  renderCurrentPage();
+}
+document.getElementById('resetBtn').onclick = resetDemo;
+
+buildNav();
+recalcAll();
+highlightNav();
+renderCurrentPage();
+log('mem','MEMORY AGENT', 'System initialized. Institutional memory loaded for 8 helpers and 6 households.');
+</script>
+</body>
+</html>
